@@ -1,5 +1,5 @@
 # Piekomees
 
-A maze game for Pico-8.
+a maze game for pico-8.
 
 ![img](snapshot/snapshot.png)
