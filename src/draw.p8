@@ -47,7 +47,7 @@ end
 
 function draw_life_lost_screen(background)
     cls(background)
-    print("ouch, that hurts! try again.", 2, 2)
+    print("ouch, that hurts! try again.\n\n\n\n\n\npress x or z to continue", 2, 2)
 end
 
 function draw_game_over_screen(background)
