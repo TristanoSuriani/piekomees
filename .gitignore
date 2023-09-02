@@ -1,0 +1,27 @@
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.iws
+
+# Compiled output
+/out/
+/target/
+
+# Logs and databases
+*.log
+*.dat
+*.db
+
+# User-specific settings
+shelf/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Other common ignores
+*.swp
+*.swo
+*.bak
+*.tmp
+/.idea/
