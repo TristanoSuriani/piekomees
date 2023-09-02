@@ -12,7 +12,7 @@ function _init()
 
     backgrounds = {
         waiting = 5,
-        in_progress = 3,
+        in_progress = 0,
         game_over = 8,
         completed = 2,
         life_lost = 1
@@ -45,8 +45,8 @@ function reset_game_data()
     local player = reset_player(grid)
 
     local border = grid.border
-    -- local blocks = create_blocks_level_1()
-    local blocks = {}
+    local blocks = create_blocks_level_1()
+    -- local blocks = {}
     local level = create_level(blocks, player, create_enemies(grid), grid)
 
     local map = {
