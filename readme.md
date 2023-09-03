@@ -1,4 +1,4 @@
-# Piekomees
+# piekomees
 
 a maze game for pico-8.
 
