@@ -25,6 +25,19 @@ function _init()
         right = 3
     }
 
+    screen_properties = {
+        x_offset = 8,
+        y_offset = 16
+    }
+
+    grid_elements = {
+        player = -1,
+        nothing = 0,
+        candy = 1,
+        block = 2,
+        enemy = 3
+    }
+
     reset_game_data()
 end
 
@@ -41,14 +54,8 @@ function reset_game_data()
 
     state.current = state.waiting
 
-    local grid = create_grid(8, 16, 8, 14, 13)
-    local player = reset_player(grid)
-
-    local border = grid.border
-    local blocks = create_blocks_level_1()
-    -- local blocks = {}
-    local level = create_level(blocks, player, create_enemies(grid), grid)
-
+    local levels_arrays = init_levels_arrays()
+    local level = create_level_from_level_array(levels_arrays[1])
     local map = {
         x = 0,
         y = 0
@@ -59,9 +66,10 @@ function reset_game_data()
         title = title,
         state = state,
         powerup = powerup,
-        player = player,
-        grid = grid,
-        border = border,
+        player = level.player,
+        initial_player_position = level.initial_player_position,
+        grid = level.grid,
+        border = level.grid.border,
         level = level,
         score = 0,
         lives = 3,

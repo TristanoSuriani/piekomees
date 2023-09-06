@@ -45,7 +45,7 @@ function update_game_in_progress(game_data)
     if is_colliding_with_enemies(player, game_data.level.enemies) then
         game_data.lives -= 1
         game_data.state.current = game_data.state.life_lost
-        game_data.player = reset_player(game_data.grid)
+        game_data.player = reset_player(game_data.initial_player_position.x, game_data.initial_player_position.y)
     end
 
     if game_data.lives == 0 then
@@ -157,16 +157,16 @@ end
 
 function is_colliding_with_candy(player, candy)
     -- Calculate the center points of the player and candy
-    local playerCenterX = player.x + 2
-    local playerCenterY = player.y + 2
-    local candyCenterX = candy.x + 2
-    local candyCenterY = candy.y + 2
+    local player_center_x = player.x + 2
+    local player_center_y = player.y + 2
+    local candy_center_x = candy.x + 2
+    local candy_center_y = candy.y + 2
 
     -- Check collision using a 4x4 bounding box around the center points
-    return playerCenterX < candyCenterX + 4 and
-           playerCenterX + 4 > candyCenterX and
-           playerCenterY < candyCenterY + 4 and
-           playerCenterY + 4 > candyCenterY
+    return player_center_x < candy_center_x + 4 and
+           player_center_x + 4 > candy_center_x and
+           player_center_y < candy_center_y + 4 and
+           player_center_y + 4 > candy_center_y
 end
 
 function is_level_completed(game_data)

@@ -5,7 +5,6 @@ __lua__
 #include src/init.p8
 #include src/update.p8
 #include src/draw.p8
-#include src/grid.p8
 #include src/levels.p8
 
 

@@ -1,4 +1,89 @@
-function reset_player(grid)
+function init_levels_arrays()
+    local p = -1
+
+    local level1 = {
+        { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3 },
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, p, 1, 1, 1, 1, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1 },
+        { 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 2, 1, 1 },
+        { 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1 },
+        { 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1 },
+        { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3 }
+    }
+
+    local level2 = {
+        { 3, 1, 1, 1, 1 },
+        { 3, 1, 1, 1, 1 },
+        { 3, 1, 1, 1, p },
+    }
+
+    return {
+        level1,
+        level2
+    }
+end
+
+function create_level_from_level_array(level_array)
+    local n = #level_array
+    local first_column = level_array[1]
+    local m = #first_column
+    local grid = create_grid(screen_properties.x_offset, screen_properties.y_offset, tile_size, m, n)
+    local player = {}
+    local candies = {}
+    local blocks = {}
+    local enemies = {}
+
+
+    for i = 1, n, 1 do
+        for j = 1, m, 1 do
+            local cell = level_array[i][j]
+            local x = screen_properties.x_offset + (j - 1) * tile_size
+            local y = screen_properties.y_offset + (i - 1) * tile_size
+
+            if cell == grid_elements.candy then
+                candies[#candies + 1] = {
+                    x = x,
+                    y = y,
+                    spr = 3
+                }
+            elseif cell == grid_elements.block then
+                blocks[#blocks + 1] = {
+                    x = x,
+                    y = y,
+                    spr = 4
+                }
+            elseif cell == grid_elements.enemy then
+                enemies[#enemies + 1] = {
+                    x = x,
+                    y = y,
+                    spr = 2
+                }
+            elseif cell == grid_elements.player then
+                player = reset_player(x, y)
+            end
+        end
+    end
+
+    return {
+            blocks = blocks,
+            candies = candies,
+            player = player,
+            enemies = enemies,
+            grid = grid,
+            initial_player_position = {
+                x = player.x,
+                y = player.y
+            }
+        }
+end
+
+function reset_player(x, y)
     local player_state = {
         dead = 0,
         alive = 1,
@@ -7,137 +92,57 @@ function reset_player(grid)
     player_state.current = player_state.alive
     return {
         spr = 1,
-        x = (grid.x0 + grid.x1) / 2,
-        y = (grid.y0 + grid.y1) / 2 - 4,
+        x = x,
+        y = y,
         dx = 2,
         dy = 2,
-        powerup = init_powerup(),
+        powerup = {},
         direction = direction.idle,
         state = player_state
     }
 end
 
-function init_powerup()
-    return {
-        none = 0
+function create_grid(x_offset, y_offset, tile_size, x_tiles, y_tiles)
+    local grid = {
+        x_tiles = x_tiles,
+        y_tiles = y_tiles,
+        tile_size = tile_size,
+        x0 = x_offset,
+        x1 = x_offset + (x_tiles * tile_size),
+        y0 = y_offset,
+        y1 = y_offset + (tile_size * y_tiles)
     }
-end
 
-function create_level(blocks, player, enemies, grid)
-    return {
-        blocks = blocks,
-        candies = create_candies(blocks, player, enemies, grid),
-        player = player,
-        enemies = enemies
+    grid.border = {
+        x0 = grid.x0 - 1,
+        x1 = grid.x1,
+        y0 = grid.y0 - 1,
+        y1 = grid.y1,
+        colour = 10
     }
-end
 
-function create_enemies(grid)
-    return {
-        create_enemy(grid.x0, grid.y0),
-        create_enemy(grid.x0, grid.y1 - tile_size),
-        create_enemy(grid.x1 - tile_size, grid.y0),
-        create_enemy(grid.x1 - tile_size, grid.y1 - tile_size)
-    }
-end
-
-function create_enemy(x, y)
-    return {
-        spr = 2,
-        x = x,
-        y = y,
-        dx = 0.2,
-        dy = 0.2,
-        direction = direction.idle
-    }
-end
-
-function create_blocks_level_1()
-    local blocks = {}
-    blocks = add_column_of_blocks(blocks, 16, 40, 7)
-    blocks = add_row_of_blocks(blocks, 40, 32, 8)
-    blocks = add_column_of_blocks(blocks, 96, 32, 4)
-    blocks = add_column_of_blocks(blocks, 96, 80, 4)
-    blocks = add_column_of_blocks(blocks, 16, 32, 8)
-    blocks = add_row_of_blocks(blocks, 72, 104, 3)
-    blocks = add_column_of_blocks(blocks, 72, 88, 3)
-    blocks = add_row_of_blocks(blocks, 40, 88, 4)
-    blocks = add_column_of_blocks(blocks, 40, 88, 3)
-    return blocks
-end
-
-function create_candies(blocks, player, enemies, grid)
-    local candies = {}
-    local i = 0
-    for x = grid.x0, grid.x1 - 1, tile_size do
-        for y = grid.y0, grid.y1 - tile_size, tile_size do
-            if not is_tile_occupied(blocks, player, enemies, x, y) then
-                i += 1
-                candies[i] = {
-                    x = x,
-                    y = y,
-                    spr = 3
-                }
-            end
-        end
-    end
-    return candies
-end
-
-function add_column_of_blocks(blocks, x, y, length)
-    local nOfBlocks = #blocks
-    for i = 1, length - 1, 1 do
-        blocks[nOfBlocks + i] = {
-            x = x,
-            y = y + tile_size * (i - 1),
-            spr = 4
+    grid.get_cell_coordinates = function(x, y)
+        return {
+            x = x_offset + tile_size * x,
+            y = y_offset + tile_size * y,
         }
     end
-    return blocks
-end
 
-function add_row_of_blocks(blocks, x, y, length)
-    local nOfBlocks = #blocks
-    for i = 1, length, 1 do
-        blocks[nOfBlocks + i] = {
-            x = x + tile_size * (i - 1),
-            y = y,
-            spr = 4
-        }
-    end
-    return blocks
-end
-
-function is_tile_occupied(blocks, player, enemies, x, y)
-    local width, height = 4, 4 -- Assuming the width and height of each sprite
-
-    local function collides(a, b)
-        return a.x < b.x + width and
-               a.x + width > b.x and
-               a.y < b.y + height and
-               a.y + height > b.y
+    grid.collide_border_top = function(thing)
+        return thing.y <= grid.y0
     end
 
-    local candy = { x = x, y = y }
-
-    -- Check Blocks
-    for i, block in pairs(blocks) do
-        if collides(block, candy) then
-            return true
-        end
+    grid.collide_border_bottom = function(thing)
+        return thing.y >= grid.y1 - tile_size
     end
 
-    -- Check Player
-    if collides(player, candy) then
-        return true
+    grid.collide_border_left = function(thing)
+        return thing.x <= grid.x0
     end
 
-    -- Check Enemies
-    for i, enemy in pairs(enemies) do
-        if collides(enemy, candy) then
-            return true
-        end
+    grid.collide_border_right = function(thing)
+        return thing.x >= grid.x1 - tile_size
     end
 
-    return false
+    return grid
 end

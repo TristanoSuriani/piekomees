@@ -29,7 +29,6 @@ function draw_game_in_progress(game_data, background)
     end
 
     cls(background)
-    -- draw_debug_grid(grid)
     map(game_data.map.x, game_data.map.y)
     rect(border.x0, border.y0, border.x1, border.y1, border.colour)
     draw_things(game_data.level.blocks)
@@ -63,14 +62,5 @@ end
 function draw_things(things)
     for _, thing in pairs(things) do
         spr(thing.spr, thing.x, thing.y)
-    end
-end
-
-function draw_debug_grid(grid)
-    local colour = 14
-    for x = grid.x0, grid.x1, 1 do
-        for y = grid.y0, grid.y1, 1 do
-            pset(x, y, colour)
-        end
     end
 end
