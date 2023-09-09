@@ -6,6 +6,8 @@ __lua__
 #include src/update.p8
 #include src/draw.p8
 #include src/levels.p8
+#include src/events.p8
+#include src/player.p8
 
 
 

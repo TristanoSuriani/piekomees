@@ -1,0 +1,22 @@
+@startuml
+
+state waiting
+state new_game
+state in_progress
+state game_over
+state completed
+state life_lost
+state new_level
+
+new_game -down-> waiting
+waiting -down-> in_progress : key z or x pressed
+in_progress -down-> completed : all levels completed
+in_progress -up-> life_lost : collision with enemy
+in_progress -down-> new_level : all candies collected
+life_lost -down-> game_over : no lives left
+game_over -up-> new_game : always
+completed -up-> new_game : always
+life_lost -right-> in_progress : key z or x pressed
+new_level -up-> in_progress : key z or x pressed
+
+@enduml

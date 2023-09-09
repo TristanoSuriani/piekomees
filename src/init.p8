@@ -1,5 +1,5 @@
 function _init()
-    controls = {
+    local controls = {
         up = 2,
         down = 3,
         left = 0,
@@ -8,29 +8,32 @@ function _init()
         x = 5,
     }
 
-    tile_size = 8
+    local tile_size = 8
 
-    backgrounds = {
+    local backgrounds = {
         waiting = 5,
         in_progress = 0,
         game_over = 8,
-        completed = 2,
-        life_lost = 1
+        ending_screen = 2,
+        life_lost = 1,
+        new_level = 3,
+        new_game = 6,
+        level_completed = 7,
     }
 
-    direction = {
+    local directions = {
         up = 0,
         down = 1,
         left = 2,
         right = 3
     }
 
-    screen_properties = {
+    local screen_properties = {
         x_offset = 8,
         y_offset = 16
     }
 
-    grid_elements = {
+    local grid_elements = {
         player = -1,
         nothing = 0,
         candy = 1,
@@ -38,28 +41,55 @@ function _init()
         enemy = 3
     }
 
-    reset_game_data()
-end
-
-function reset_game_data()
-    local title = "lasciate ogni speranza \nvoi che entrate"
-
-    local state = {
-        waiting = 0,
-        in_progress = 1,
-        game_over = 2,
-        completed = 3,
-        life_lost = 4
-    }
-
-    state.current = state.waiting
-
-    local levels_arrays = init_levels_arrays()
-    local level = create_level_from_level_array(levels_arrays[1])
     local map = {
         x = 0,
         y = 0
     }
+
+    local states = {
+        waiting = "waiting",
+        in_progress = "in_progress",
+        game_over = "game_over",
+        completed = "completed",
+        life_lost = "life_lost",
+        new_level = "new_level",
+        new_game = "new_game",
+        level_completed = "level_completed",
+    }
+
+    local events = {
+        player_collided_with_candy = 1,
+        player_collided_with_enemy = 2,
+    }
+
+    local state_machine = init_state_machine(states)
+    local events_handlers = init_events_handlers(events)
+
+    constants = {
+        controls = controls,
+        tile_size = tile_size,
+        backgrounds = backgrounds,
+        directions = directions,
+        screen_properties = screen_properties,
+        grid_elements = grid_elements,
+        levels_arrays = init_levels_arrays(),
+        states = states,
+        state = states.new_game,
+        events = events,
+        map = map,
+        state_machine = state_machine,
+        events_handlers = events_handlers,
+    }
+
+    reset_game_data(1, constants.states.new_game)
+end
+
+function reset_game_data(level_number, state)
+    local levels_arrays = init_levels_arrays()
+    local level_array = constants.levels_arrays[level_number]
+    local msg = "level_array is not set for level " .. level_number
+    assert(level_array, msg)
+    local level = create_level_from_level_array(level_array)
 
     game_data = {
         background = background,
@@ -70,9 +100,9 @@ function reset_game_data()
         initial_player_position = level.initial_player_position,
         grid = level.grid,
         border = level.grid.border,
-        level = level,
+        level_number = level_number,
         score = 0,
         lives = 3,
-        map = map
+        level = level
     }
 end

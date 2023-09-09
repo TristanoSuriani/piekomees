@@ -1,6 +1,26 @@
 function init_levels_arrays()
     local p = -1
 
+    local level01 = {{ 3, p, 1 }}
+    local level02 = {{ 2, p, 1 }}
+
+    local test_level1 = {
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3 },
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 2, 1, 1, 1, 1, 1, p, 1, 1, 1, 1, 1, 1 },
+    }
+
+    local test_level2 = {
+        { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, p },
+        { 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1 },
+        { 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2 },
+    }
+
     local level1 = {
         { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3 },
         { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -18,14 +38,19 @@ function init_levels_arrays()
     }
 
     local level2 = {
-        { 3, 1, 1, 1, 1 },
-        { 3, 1, 1, 1, 1 },
-        { 3, 1, 1, 1, p },
-    }
+       { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, p },
+       { 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+       { 1, 2, 3, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 1 },
+       { 1, 2, 1, 1, 2, 2, 2, 2, 1, 1, 1, 2, 1, 1 },
+       { 1, 2, 3, 1, 1, 3, 3, 2, 3, 4, 1, 2, 1, 1 },
+       { 1, 2, 1, 1, 1, 1, 1, 2, 1, 3, 1, 1, 1, 1 },
+       { 1, 2, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1 },
+
+   }
 
     return {
-        level1,
-        level2
+        level01,
+        level02
     }
 end
 
@@ -33,12 +58,14 @@ function create_level_from_level_array(level_array)
     local n = #level_array
     local first_column = level_array[1]
     local m = #first_column
+    local screen_properties = constants.screen_properties
+    local tile_size = constants.tile_size
     local grid = create_grid(screen_properties.x_offset, screen_properties.y_offset, tile_size, m, n)
-    local player = {}
+    local grid_elements = constants.grid_elements
     local candies = {}
     local blocks = {}
     local enemies = {}
-
+    local player = {}
 
     for i = 1, n, 1 do
         for j = 1, m, 1 do
@@ -70,6 +97,8 @@ function create_level_from_level_array(level_array)
         end
     end
 
+    assert(player.x, "player is not set in level")
+
     return {
             blocks = blocks,
             candies = candies,
@@ -84,12 +113,6 @@ function create_level_from_level_array(level_array)
 end
 
 function reset_player(x, y)
-    local player_state = {
-        dead = 0,
-        alive = 1,
-    }
-
-    player_state.current = player_state.alive
     return {
         spr = 1,
         x = x,
@@ -97,12 +120,12 @@ function reset_player(x, y)
         dx = 2,
         dy = 2,
         powerup = {},
-        direction = direction.idle,
-        state = player_state
+        direction = constants.directions.idle,
     }
 end
 
 function create_grid(x_offset, y_offset, tile_size, x_tiles, y_tiles)
+    local tile_size = constants.tile_size
     local grid = {
         x_tiles = x_tiles,
         y_tiles = y_tiles,
@@ -121,19 +144,12 @@ function create_grid(x_offset, y_offset, tile_size, x_tiles, y_tiles)
         colour = 10
     }
 
-    grid.get_cell_coordinates = function(x, y)
-        return {
-            x = x_offset + tile_size * x,
-            y = y_offset + tile_size * y,
-        }
-    end
-
     grid.collide_border_top = function(thing)
         return thing.y <= grid.y0
     end
 
     grid.collide_border_bottom = function(thing)
-        return thing.y >= grid.y1 - tile_size
+        return thing.y >= grid.y1 - constants.tile_size
     end
 
     grid.collide_border_left = function(thing)
@@ -141,7 +157,7 @@ function create_grid(x_offset, y_offset, tile_size, x_tiles, y_tiles)
     end
 
     grid.collide_border_right = function(thing)
-        return thing.x >= grid.x1 - tile_size
+        return thing.x >= grid.x1 - constants.tile_size
     end
 
     return grid

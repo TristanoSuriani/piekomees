@@ -1,176 +1,166 @@
 function _update()
+    local states = constants.states
     local state = game_data.state
-    if game_data.player.state.current == game_data.player.state.dead then
-        reset_game_data()
-        game_data.state.current = state.game_over
-        return
+    local controls = constants.controls
+    local levels_arrays = constants.levels_arrays
+
+    local state_machine = constants.state_machine
+    local transitions = state_machine.transitions[state]
+    local handler = state_machine.handlers[state]
+
+    if handler then
+        handler()
     end
 
-    if state.current == state.in_progress then
-        update_game_in_progress(game_data)
-        if is_level_completed(game_data) then
-            reset_game_data()
-            game_data.state.current = state.completed
-        end
+    local msg = "no transition for state " .. state
+    assert(transitions, msg)
 
-    elseif state.current == state.game_over or state.current == state.completed then
-        if btnp(controls.z) or btnp(controls.x) then
-            game_data.state.current = state.waiting
-        end
-    else
-        if btnp(controls.z) or btnp(controls.x) then
-            game_data.state.current = state.in_progress
+    for i = 1, #transitions, 1 do
+        local transition = transitions[i]
+        if transition.trigger(game_data) then
+            if transition.hook then
+                transition.hook()
+            end
+            game_data.state = transition.next_state
         end
     end
 end
 
+function init_state_machine(states, events)
+    local state_machine = {}
+    state_machine.handlers = {}
+    state_machine.transitions = {}
 
-function update_game_in_progress(game_data)
+    state_machine.transitions[states.new_game] = {
+       {
+           trigger = is_key_z_or_z_pressed,
+           next_state = states.new_level
+       }
+    }
+
+    state_machine.transitions[states.waiting] = {
+        {
+            trigger = is_key_z_or_z_pressed,
+            next_state = states.new_level
+        }
+    }
+
+    state_machine.transitions[states.new_level] = {
+        {
+            trigger = is_key_z_or_z_pressed,
+            next_state = states.in_progress
+        }
+    }
+
+    state_machine.handlers[states.in_progress] = update_game_in_progress
+
+    state_machine.transitions[states.in_progress] = {
+         {
+             trigger = all_candies_collected,
+             next_state = states.level_completed
+         },
+    --     {
+    --         trigger = collision_with_enemy,
+    --         next_state = states.life_lost
+    --     },
+    }
+
+    state_machine.transitions[states.level_completed] = {
+        {
+            trigger = all_levels_completed,
+            next_state = states.completed,
+        },
+        {
+            trigger = is_key_z_or_z_pressed,
+            next_state = states.new_level,
+            hook = level_completed_to_new_level_hook
+        }
+    }
+
+    state_machine.transitions[states.completed] = {
+        {
+            trigger = is_key_z_or_z_pressed,
+            next_state = states.new_game,
+            hook = completed_to_new_game_hook
+        }
+    }
+
+    -- state_machine.transitions[states.game_over] = {
+    --     {
+    --         trigger = is_key_z_or_z_pressed,
+    --         next_state = states.waiting
+    --     }
+    -- }
+
+    -- state_machine.transitions[states.life_lost] = {
+    --     {
+    --         trigger = all_lives_lost,
+    --         next_state = states.game_over
+    --     },
+    --     {
+    --         trigger = is_key_z_or_z_pressed,
+    --         next_state = states.in_progress
+    --     }
+    -- }
+    --
+    return state_machine
+end
+
+function is_key_z_or_z_pressed()
+    local controls = constants.controls
+    return btnp(controls.z) or btnp(controls.x)
+end
+
+function all_levels_completed()
+    return game_data.level_number == #constants.levels_arrays
+end
+
+function all_lives_lost()
+    return game_data.lives == 0
+end
+
+function all_candies_collected()
+    local candies = game_data.level.candies
+    return #candies == 0
+end
+
+function collision_with_enemy()
+    return is_colliding_with_enemies(game_data.player, game_data.level.enemies)
+end
+
+function update_game_in_progress()
     local player = game_data.player
     local level = game_data.level
     local blocks = game_data.level.blocks
     local candies = game_data.level.candies
     local current_direction = get_direction()
 
-    update_player_position(game_data, player, current_direction)
+    update_player_position(current_direction)
+    collect_candy_if_possible()
+end
+
+function level_completed_to_new_level_hook()
+    reset_game_data(game_data.level_number + 1, constants.states.level_completed)
+end
+
+function completed_to_new_game_hook()
+    reset_game_data(1, constants.states.new_game)
+end
+
+function collect_candy_if_possible()
+    local player = game_data.player
+    local level = game_data.level
+    local candies = game_data.level.candies
 
     for i, candy in ipairs(candies) do
         if is_colliding_with_candy(player, candy) then
-            level.candies = collect_candy(candies, i)
-            game_data.score += 1
+            publish_event({
+                type = constants.events.player_collided_with_candy,
+                data = {
+                    collected_index
+                }
+            })
             break
         end
     end
-
-    if is_colliding_with_enemies(player, game_data.level.enemies) then
-        game_data.lives -= 1
-        game_data.state.current = game_data.state.life_lost
-        game_data.player = reset_player(game_data.initial_player_position.x, game_data.initial_player_position.y)
-    end
-
-    if game_data.lives == 0 then
-        game_data.player.state.current = game_data.player.state.dead
-    end
 end
-
-function update_player_position(game_data, player, current_direction)
-    local blocks = game_data.level.blocks
-    local old_y = player.y
-    local old_x = player.x
-    local grid = game_data.grid
-
-    if current_direction then
-        player.direction = current_direction
-    end
-
-    if player.direction == direction.idle then
-        return
-    end
-
-    if player.direction == direction.up then
-        player.y -= player.dy
-        if grid.collide_border_top(player) then
-            player.y = grid.y0
-
-        elseif is_colliding_with_blocks(player, blocks) then
-            player.y = old_y
-        end
-    end
-
-    if player.direction == direction.down then
-        player.y += player.dy
-        if grid.collide_border_bottom(player) then
-            player.y = grid.y1 - tile_size
-
-        elseif is_colliding_with_blocks(player, blocks) then
-            player.y = old_y
-        end
-    end
-
-    if player.direction == direction.left then
-        player.x -= player.dx
-        if grid.collide_border_left(player) then
-            player.x = grid.x0
-         elseif is_colliding_with_blocks(player, blocks) then
-            player.x = old_x
-        end
-    end
-
-    if player.direction == direction.right then
-        player.x += player.dx
-        if grid.collide_border_right(player) then
-            player.x = grid.x1 - tile_size
-        elseif is_colliding_with_blocks(player, blocks) then
-            player.x = old_x
-        end
-    end
-end
-
-function get_direction()
-    if btnp(controls.up) then
-        return direction.up
-    elseif btnp(controls.down) then
-        return direction.down
-    elseif btnp(controls.left) then
-        return direction.left
-    elseif btnp(controls.right) then
-        return direction.right
-    end
-end
-
-function collect_candy(candies, collectedIndex)
-    local newCandies = {}
-    local j = 1
-    for i, candy in ipairs(candies) do
-        if i ~= collectedIndex then
-            newCandies[j] = candy
-            j += 1
-        end
-    end
-    return newCandies
-end
-
-function is_colliding(a, b)
-    return a.x < b.x + tile_size and
-           a.x + tile_size > b.x and
-           a.y < b.y + tile_size and
-           a.y + tile_size > b.y
-end
-
-function is_colliding_with_blocks(thing, blocks)
-    for _, block in pairs(blocks) do
-        if is_colliding(thing, block) then
-            return true
-        end
-    end
-    return false
-end
-
-function is_colliding_with_enemies(thing, enemies)
-    for _, enemy in pairs(enemies) do
-        if is_colliding(thing, enemy) then
-            return true
-        end
-    end
-    return false
-end
-
-function is_colliding_with_candy(player, candy)
-    -- Calculate the center points of the player and candy
-    local player_center_x = player.x + 2
-    local player_center_y = player.y + 2
-    local candy_center_x = candy.x + 2
-    local candy_center_y = candy.y + 2
-
-    -- Check collision using a 4x4 bounding box around the center points
-    return player_center_x < candy_center_x + 4 and
-           player_center_x + 4 > candy_center_x and
-           player_center_y < candy_center_y + 4 and
-           player_center_y + 4 > candy_center_y
-end
-
-function is_level_completed(game_data)
-    local candies = game_data.level.candies
-    return #candies == 0
-end
-
