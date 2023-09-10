@@ -55,14 +55,15 @@ function init_state_machine(states, events)
     state_machine.handlers[states.in_progress] = update_game_in_progress
 
     state_machine.transitions[states.in_progress] = {
-         {
-             trigger = all_candies_collected,
-             next_state = states.level_completed
-         },
-    --     {
-    --         trigger = collision_with_enemy,
-    --         next_state = states.life_lost
-    --     },
+        {
+            trigger = all_candies_collected,
+            next_state = states.level_completed
+        },
+        {
+            trigger = collision_with_enemy,
+            next_state = states.life_lost,
+            hook = in_progress_to_life_lost_hook
+        },
     }
 
     state_machine.transitions[states.level_completed] = {
@@ -85,24 +86,24 @@ function init_state_machine(states, events)
         }
     }
 
-    -- state_machine.transitions[states.game_over] = {
-    --     {
-    --         trigger = is_key_z_or_z_pressed,
-    --         next_state = states.waiting
-    --     }
-    -- }
+    state_machine.transitions[states.game_over] = {
+        {
+            trigger = is_key_z_or_z_pressed,
+            next_state = states.new_game
+        }
+    }
 
-    -- state_machine.transitions[states.life_lost] = {
-    --     {
-    --         trigger = all_lives_lost,
-    --         next_state = states.game_over
-    --     },
-    --     {
-    --         trigger = is_key_z_or_z_pressed,
-    --         next_state = states.in_progress
-    --     }
-    -- }
-    --
+    state_machine.transitions[states.life_lost] = {
+        {
+            trigger = all_lives_lost,
+            next_state = states.game_over
+        },
+        {
+            trigger = is_key_z_or_z_pressed,
+            next_state = states.in_progress
+        }
+    }
+
     return state_machine
 end
 
@@ -140,11 +141,17 @@ function update_game_in_progress()
 end
 
 function level_completed_to_new_level_hook()
-    reset_game_data(game_data.level_number + 1, constants.states.level_completed)
+    reset_game_data(game_data.level_number + 1, constants.states.level_completed, game_data.score)
 end
 
 function completed_to_new_game_hook()
-    reset_game_data(1, constants.states.new_game)
+    reset_game_data(1, constants.states.new_game, 0)
+end
+
+function in_progress_to_life_lost_hook()
+    publish_event({
+        type = constants.events.player_collided_with_enemy,
+    })
 end
 
 function collect_candy_if_possible()
@@ -153,14 +160,15 @@ function collect_candy_if_possible()
     local candies = game_data.level.candies
 
     for i, candy in ipairs(candies) do
+
         if is_colliding_with_candy(player, candy) then
             publish_event({
                 type = constants.events.player_collided_with_candy,
                 data = {
-                    collected_index
+                    collected_index = i
                 }
             })
-            break
+            return
         end
     end
 end

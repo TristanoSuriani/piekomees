@@ -1,6 +1,7 @@
 function init_events_handlers(events)
     local events_handlers = {}
     events_handlers[events.player_collided_with_candy] = handle_player_collided_with_candy
+    events_handlers[events.player_collided_with_enemy] = handle_player_collided_with_enemy
     return events_handlers
 end
 
@@ -12,11 +13,15 @@ function publish_event(event)
 end
 
 function handle_player_collided_with_candy(event)
-    local collected_index = event.collected_index
+    local collected_index = event.data.collected_index
     local level = game_data.level
-
-    level.candies = collect_candy(candies, collected_index)
+    level.candies = collect_candy(level.candies, collected_index)
     game_data.score += 1
+end
+
+function handle_player_collided_with_enemy(event)
+    game_data.lives -= 1
+    game_data.player = reset_player(game_data.initial_player_position.x, game_data.initial_player_position.y)
 end
 
 function collect_candy(candies, collected_index)

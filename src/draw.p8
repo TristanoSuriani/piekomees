@@ -1,6 +1,7 @@
 function _draw()
     local state = game_data.state
     local backgrounds = constants.backgrounds
+    color(constants.text_colour)
 
     if state == constants.states.new_game then
         render_new_game_screen()
@@ -46,7 +47,9 @@ function render_game_in_progress(game_data)
     render_things(game_data.level.enemies)
     render_things(game_data.level.candies)
     local candies = game_data.level.candies
-    print ("score: " .. score_output .. ", lives: " .. game_data.lives .. ", level: " .. game_data.level_number)
+    local msg = "score: " .. score_output .. ", lives: " .. game_data.lives .. ", level: " .. game_data.level_number
+                            .. ",\ncandies: " .. #game_data.level.candies
+    print(msg, 2, 2)
     spr(player.spr, player.x, player.y)
 end
 

@@ -79,12 +79,13 @@ function _init()
         map = map,
         state_machine = state_machine,
         events_handlers = events_handlers,
+        text_colour = 10
     }
 
-    reset_game_data(1, constants.states.new_game)
+    reset_game_data(1, constants.states.new_game, 0)
 end
 
-function reset_game_data(level_number, state)
+function reset_game_data(level_number, state, score)
     local levels_arrays = init_levels_arrays()
     local level_array = constants.levels_arrays[level_number]
     local msg = "level_array is not set for level " .. level_number
@@ -101,7 +102,7 @@ function reset_game_data(level_number, state)
         grid = level.grid,
         border = level.grid.border,
         level_number = level_number,
-        score = 0,
+        score = score,
         lives = 3,
         level = level
     }

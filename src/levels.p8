@@ -1,8 +1,8 @@
 function init_levels_arrays()
     local p = -1
 
-    local level01 = {{ 3, p, 1 }}
-    local level02 = {{ 2, p, 1 }}
+    local level01 = {{ 3, p, 1, 1, 1 }}
+    local level02 = {{ 2, p, 1, 1, 1 }}
 
     local test_level1 = {
         { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3 },
