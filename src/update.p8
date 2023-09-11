@@ -89,7 +89,8 @@ function init_state_machine(states, events)
     state_machine.transitions[states.game_over] = {
         {
             trigger = is_key_z_or_z_pressed,
-            next_state = states.new_game
+            next_state = states.new_game,
+            hook = game_over_to_new_game_hook
         }
     }
 
@@ -141,11 +142,15 @@ function update_game_in_progress()
 end
 
 function level_completed_to_new_level_hook()
-    reset_game_data(game_data.level_number + 1, constants.states.level_completed, game_data.score)
+    reset_game_data(game_data.level_number + 1, constants.states.level_completed, game_data.score, game_data.lives + 2)
 end
 
 function completed_to_new_game_hook()
-    reset_game_data(1, constants.states.new_game, 0)
+    reset_game_data(1, constants.states.new_game, 0, constants.lives)
+end
+
+function game_over_to_new_game_hook()
+    reset_game_data(1, constants.states.new_game, 0, constants.lives)
 end
 
 function in_progress_to_life_lost_hook()
