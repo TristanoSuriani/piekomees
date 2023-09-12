@@ -57,7 +57,8 @@ function init_state_machine(states, events)
     state_machine.transitions[states.in_progress] = {
         {
             trigger = all_candies_collected,
-            next_state = states.level_completed
+            next_state = states.level_completed,
+            hook = in_progress_to_level_completed_hook
         },
         {
             trigger = collision_with_enemy,
@@ -156,6 +157,12 @@ end
 function in_progress_to_life_lost_hook()
     publish_event({
         type = constants.events.player_collided_with_enemy,
+    })
+end
+
+function in_progress_to_level_completed_hook()
+    publish_event({
+        type = constants.events.level_completed
     })
 end
 

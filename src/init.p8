@@ -60,6 +60,13 @@ function _init()
     local events = {
         player_collided_with_candy = 1,
         player_collided_with_enemy = 2,
+        level_completed = 3,
+    }
+
+    local sounds = {
+        eating = 0,
+        hurt = 1,
+        won = 2,
     }
 
     local state_machine = init_state_machine(states)
@@ -81,6 +88,7 @@ function _init()
         events_handlers = events_handlers,
         text_colour = 10,
         lives = 10,
+        sounds = sounds,
     }
 
     reset_game_data(1, constants.states.new_game, 0, constants.lives)
