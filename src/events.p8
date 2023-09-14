@@ -1,7 +1,7 @@
 function init_events_handlers(events)
     local events_handlers = {}
     events_handlers[events.player_collided_with_candy] = handle_player_collided_with_candy
-    events_handlers[events.player_collided_with_enemy] = handle_player_collided_with_enemy
+    events_handlers[events.player_lost_a_life] = handle_player_lost_a_life
     events_handlers[events.level_completed] = handle_level_completed
     return events_handlers
 end
@@ -21,12 +21,14 @@ function handle_player_collided_with_candy(event)
         sfx(constants.sounds.eating)
     end
     game_data.score += 1
+    game_data.health += 16
 end
 
-function handle_player_collided_with_enemy(event)
+function handle_player_lost_a_life(event)
     sfx(constants.sounds.hurt)
     game_data.lives -= 1
     game_data.player = reset_player(game_data.initial_player_position.x, game_data.initial_player_position.y)
+    game_data.health = constants.initial_health
 end
 
 function handle_level_completed(event)

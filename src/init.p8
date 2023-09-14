@@ -59,7 +59,7 @@ function _init()
 
     local events = {
         player_collided_with_candy = 1,
-        player_collided_with_enemy = 2,
+        player_lost_a_life = 2,
         level_completed = 3,
     }
 
@@ -89,6 +89,7 @@ function _init()
         text_colour = 10,
         lives = 10,
         sounds = sounds,
+        initial_health = 1000
     }
 
     reset_game_data(1, constants.states.new_game, 0, constants.lives)
@@ -113,6 +114,7 @@ function reset_game_data(level_number, state, score, lives)
         level_number = level_number,
         score = score,
         lives = lives,
-        level = level
+        level = level,
+        health = constants.initial_health,
     }
 end

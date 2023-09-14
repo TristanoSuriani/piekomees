@@ -33,21 +33,21 @@ function init_state_machine(states, events)
 
     state_machine.transitions[states.new_game] = {
        {
-           trigger = is_key_z_or_z_pressed,
+           trigger = is_key_z_or_x_pressed,
            next_state = states.new_level
        }
     }
 
     state_machine.transitions[states.waiting] = {
         {
-            trigger = is_key_z_or_z_pressed,
+            trigger = is_key_z_or_x_pressed,
             next_state = states.new_level
         }
     }
 
     state_machine.transitions[states.new_level] = {
         {
-            trigger = is_key_z_or_z_pressed,
+            trigger = is_key_z_or_x_pressed,
             next_state = states.in_progress
         }
     }
@@ -59,6 +59,11 @@ function init_state_machine(states, events)
             trigger = all_candies_collected,
             next_state = states.level_completed,
             hook = in_progress_to_level_completed_hook
+        },
+        {
+            trigger = is_health_down_to_zero,
+            next_state = states.life_lost,
+            hook = in_progress_to_life_lost_hook
         },
         {
             trigger = collision_with_enemy,
@@ -73,7 +78,7 @@ function init_state_machine(states, events)
             next_state = states.completed,
         },
         {
-            trigger = is_key_z_or_z_pressed,
+            trigger = is_key_z_or_x_pressed,
             next_state = states.new_level,
             hook = level_completed_to_new_level_hook
         }
@@ -81,7 +86,7 @@ function init_state_machine(states, events)
 
     state_machine.transitions[states.completed] = {
         {
-            trigger = is_key_z_or_z_pressed,
+            trigger = is_key_z_or_x_pressed,
             next_state = states.new_game,
             hook = completed_to_new_game_hook
         }
@@ -89,7 +94,7 @@ function init_state_machine(states, events)
 
     state_machine.transitions[states.game_over] = {
         {
-            trigger = is_key_z_or_z_pressed,
+            trigger = is_key_z_or_x_pressed,
             next_state = states.new_game,
             hook = game_over_to_new_game_hook
         }
@@ -101,7 +106,7 @@ function init_state_machine(states, events)
             next_state = states.game_over
         },
         {
-            trigger = is_key_z_or_z_pressed,
+            trigger = is_key_z_or_x_pressed,
             next_state = states.in_progress
         }
     }
@@ -109,9 +114,13 @@ function init_state_machine(states, events)
     return state_machine
 end
 
-function is_key_z_or_z_pressed()
+function is_key_z_or_x_pressed()
     local controls = constants.controls
     return btnp(controls.z) or btnp(controls.x)
+end
+
+function is_health_down_to_zero()
+    return game_data.health <= 0
 end
 
 function all_levels_completed()
@@ -137,6 +146,7 @@ function update_game_in_progress()
     local blocks = game_data.level.blocks
     local candies = game_data.level.candies
     local current_direction = get_direction()
+    game_data.health -= 4
 
     update_player_position(current_direction)
     collect_candy_if_possible()
@@ -156,7 +166,7 @@ end
 
 function in_progress_to_life_lost_hook()
     publish_event({
-        type = constants.events.player_collided_with_enemy,
+        type = constants.events.player_lost_a_life,
     })
 end
 
